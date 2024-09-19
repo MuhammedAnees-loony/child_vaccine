@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Health Care App', // Consider giving a more descriptive app name.
+      title: 'Health Care App', // giving a more descriptive app name.
       debugShowCheckedModeBanner: false, // Removes the debug banner from the top-right.
       theme: ThemeData(
         primarySwatch: Colors.blue,
