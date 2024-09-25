@@ -16,17 +16,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Function to generate OTP by sending the phone number to the backend
   Future<void> _generateOtp() async {
-    final String phone = _phoneController.text;
-    if (phone.isEmpty) {
+    final String phoneNumber = _phoneController.text;
+    if (phoneNumber.isEmpty) {
       _showDialog('Error', 'Please enter your phone number');
       return;
     }
 
     try {
       final response = await http.post(
-        Uri.parse('http://your-flask-backend-url/generate-otp'), // Your Flask backend URL
+        Uri.parse('http://127.0.0.1:5000/generate-otp'), // Updated Flask backend URL
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phone}),
+        body: jsonEncode({'phone_number': phoneNumber}), // Updated JSON payload key
       );
 
       if (response.statusCode == 200) {
@@ -51,21 +51,12 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://your-flask-backend-url/verify-otp'), // Your Flask backend URL
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'otp': otp}),
-      );
-
-      if (response.statusCode == 200) {
-        _showDialog('Success', 'OTP verified. You are logged in.');
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        _showDialog('Error', 'OTP verification failed.');
-      }
-    } catch (e) {
-      _showDialog('Error', 'An error occurred: $e');
+    // Verify OTP against stored OTP (if verification is done locally)
+    if (otp == _generatedOtp) {
+      _showDialog('Success', 'OTP verified. You are logged in.');
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      _showDialog('Error', 'Invalid OTP.');
     }
   }
 
