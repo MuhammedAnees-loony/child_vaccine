@@ -13,6 +13,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController(); // Phone number controller
   final TextEditingController _otpController = TextEditingController();   // OTP controller
   String? _generatedOtp; // To store the OTP received from the backend
+  bool _isOtpSent = false; // Flag to check if OTP has been sent
 
   // Function to generate OTP by sending the phone number to the backend
   Future<void> _generateOtp() async {
@@ -51,7 +52,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
   // Function to verify the OTP entered by the user
   Future<void> _checkOtp() async {
     final String otp = _otpController.text;
@@ -70,6 +70,46 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       print('OTP verification failed.');
       _showDialog('Error', 'Invalid OTP.');
+    }
+  }
+
+  // Function to check login credentials against the backend
+  Future<void> _login() async {
+    final String username = _usernameController.text;
+    final String password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      _showDialog('Error', 'Please enter both username and password.');
+      return;
+    }
+
+    print('Sending login request with username: $username');
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:5000/login'), // Update to your Flask backend URL
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username, 'password': password}),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData['success']) {
+          print('Login successful. Sending OTP to ${_phoneController.text}');
+          _isOtpSent = true; // Set flag to indicate OTP is sent
+          await _generateOtp(); // Generate OTP after successful login
+          _showDialog('Success', 'Login successful. Please check your phone for the OTP.');
+        } else {
+          print('Login failed: ${responseData['message']}');
+          _showDialog('Error', responseData['message']);
+        }
+      } else {
+        print('Login request failed with status code: ${response.statusCode}');
+        _showDialog('Error', 'Login request failed.');
+      }
+    } catch (e) {
+      print('Error occurred during login: $e');
+      _showDialog('Error', 'An error occurred: $e');
     }
   }
 
@@ -122,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    // Username TextField (from the old UI)
+                    // Username TextField
                     TextField(
                       controller: _usernameController,
                       decoration: InputDecoration(
@@ -138,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     SizedBox(height: 12),
-                    // Password TextField (from the old UI)
+                    // Password TextField
                     TextField(
                       controller: _passwordController,
                       decoration: InputDecoration(
@@ -154,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     SizedBox(height: 20),
-                    // Phone Number TextField (for OTP login)
+                    // Phone Number TextField
                     TextField(
                       controller: _phoneController,
                       decoration: InputDecoration(
@@ -170,6 +210,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     SizedBox(height: 20),
+                    // Login Button
+                    ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          'Login',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12),
                     // Generate OTP Button
                     ElevatedButton(
                       onPressed: _generateOtp,
@@ -222,19 +280,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    // Register New User Button (from the old UI)
+                    // Register New User Button
                     TextButton(
                       onPressed: () {
                         print('Navigating to Register screen.');
                         Navigator.pushNamed(context, '/register');
                       },
-                      child: Text('Register New User'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.blueAccent,
-                        textStyle: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Text(
+                        'Register New User',
+                        style: TextStyle(color: Colors.blueAccent),
                       ),
                     ),
                   ],
