@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../widgets/custom_widgets.dart'; // Make sure this points to your custom widgets
+import '../widgets/custom_widgets.dart';
+import 'username_password_dialog.dart';// Make sure this points to your custom widgets
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -59,7 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _registerUser() async {
+  Future<void> _registerUser(String username, String password) async {
     print('Attempting to register user...');
     final url = Uri.parse('http://127.0.0.1:5000/register'); // Replace with your Flask backend URL
 
@@ -80,6 +81,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'state': _selectedState,
         'district': _selectedDistrict,
         'sex': _selectedSex,
+        'username': username,  // Add username to the registration data
+        'password': password,
       }),
     );
 
@@ -289,12 +292,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
-                    print('Form is valid');
-                    _registerUser();
-                  } else {
-                    print('Form is invalid');
+                    // Show the login dialog and get the username and password
+                    final loginDetails = await showLoginDialog(context);
+                    if (loginDetails != null) {
+                      // Proceed with registration if username and password are entered
+                      _registerUser(loginDetails['username']!, loginDetails['password']!);
+                    }
                   }
                 },
                 child: Text('Register'),
