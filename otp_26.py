@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify
 import mysql.connector
 import random
@@ -85,9 +86,10 @@ def register():
         state = data.get('state')
         district = data.get('district')
         sex = data.get('sex')
-
+        username = data.get('username')  
+        password = data.get('password')
         # Validate required fields
-        if not all([first_name, last_name, phone_number, dob, country, state, district, sex]):
+        if not all([first_name, last_name, phone_number, dob, country, state, district, sex,username, password]):
             return jsonify({'success': False, 'message': 'Missing required fields'}), 400
 
         # Insert the data into the database
@@ -102,6 +104,13 @@ def register():
         '''
         cursor.execute(query, (first_name, last_name, address, pincode, village, occupation, married, 
                                phone_number, dob, country, state, district, sex))
+        
+        # Insert username and hashed password into the "credentials" table
+        cred_query = '''
+            INSERT INTO credentials (username, password)
+            VALUES (%s, %s)
+        '''
+        cursor.execute(cred_query, (username, password))
 
         conn.commit()
 
