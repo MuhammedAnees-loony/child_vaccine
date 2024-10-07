@@ -124,6 +124,59 @@ def register():
     except Exception as e:
         print(f"Error during registration: {str(e)}")  # Log errors
         return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'}), 500
+    
+# Endpoint to fetch user details based on username and password
+@app.route('/get-user-details', methods=['POST'])
+def get_user_details():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+
+        # Establish database connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        print(username,password)
+        # Fetch the user ID from credentials
+        cursor.execute("SELECT userid FROM credentials WHERE username=%s AND password=%s", (username, password))
+        user_id = cursor.fetchone()
+
+        if user_id:
+            user_id = user_id[0]
+            # Fetch user details from users table
+            cursor.execute("SELECT * FROM users WHERE id=%s", (user_id,))
+            user_details = cursor.fetchone()
+            
+            if user_details:
+                return jsonify({
+                    'success': True,
+                    'user': {
+                        'id': user_details[0],
+                        'first_name': user_details[1],
+                        'last_name': user_details[2],
+                        'address': user_details[3],
+                        'pincode': user_details[4],
+                        'village': user_details[5],
+                        'occupation': user_details[6],
+                        'married': user_details[7],
+                        'phone_number': user_details[8],
+                        'dob': user_details[9],
+                        'country': user_details[10],
+                        'state': user_details[11],
+                        'district': user_details[12],
+                        'sex': user_details[13]
+                    }
+                })
+            else:
+                return jsonify({'success': False, 'message': 'User not found.'}), 404
+        else:
+            return jsonify({'success': False, 'message': 'Invalid username or password.'}), 401    
+
+    except Exception as e:
+        print(f"Error retrieving user details: {str(e)}")  # Log errors
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'}), 500
+
+    
 
 # Route to generate and return an OTP
 @app.route('/generate-otp', methods=['POST'])
