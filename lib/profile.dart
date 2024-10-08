@@ -1,11 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
+  // Removed unnecessary parameters
+  static void handleLogin(String username, String password) {
+    // Handle the login data as needed
+    print('Received username: $username and password: $password');
+    // You can store these in a state management solution if needed
+  }
+
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  Map<String, dynamic>? userDetails;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Call fetchUserDetails inside the initState
+    _fetchUserDetails();
+  }
+
+  Future<void> _fetchUserDetails() async {
+    final url = Uri.parse('http://localhost:5000/get-user-details'); // Change to your backend URL
+    final response = await http.post(url, headers: {
+      'Content-Type': 'application/json',
+    }, body: json.encode({
+      'username': '', // You can pass the username here
+      'password': '', // You can pass the password here
+    }));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        userDetails = json.decode(response.body)['user'];
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      // Show an error message if user not found or invalid credentials
+      final errorMessage = json.decode(response.body)['message'];
+      _showErrorDialog(errorMessage);
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text('Okay'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Column(
           children: <Widget>[
             // Header with Back Button and Profile Picture
@@ -37,7 +105,7 @@ class ProfilePage extends StatelessWidget {
                     backgroundColor: Colors.white,
                     child: CircleAvatar(
                       radius: 55,
-                      backgroundImage: AssetImage('D:\test2\assets\images\profile_pic.JPG'), // Replace with your image path
+                      backgroundImage: AssetImage('D:/test2/assets/images/profile_pic.JPG'), // Replace with your image path
                     ),
                   ),
                 ],
@@ -46,7 +114,7 @@ class ProfilePage extends StatelessWidget {
             SizedBox(height: 20),
             // Profile Information
             Text(
-              'Kuriakose Philip',
+              userDetails?['first_name'] ?? 'N/A',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -55,7 +123,7 @@ class ProfilePage extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text(
-              'kp.csb2226@saintgits.org',
+              userDetails?['email'] ?? 'N/A', // Assuming email is part of the user details
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black54,
@@ -70,23 +138,23 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   ProfileDetail(
                     icon: Icons.phone,
-                    detail: '9567956975',
+                    detail: userDetails?['phone_number'] ?? 'N/A',
                   ),
                   ProfileDetail(
                     icon: Icons.email,
-                    detail: 'kp.csb2226@saintgits.org',
+                    detail: userDetails?['email'] ?? 'N/A',
                   ),
                   ProfileDetail(
                     icon: Icons.cake,
-                    detail: '2003-01-12',
+                    detail: userDetails?['dob'] ?? 'N/A',
                   ),
                   ProfileDetail(
                     icon: Icons.card_membership,
-                    detail: 'VXW3894',
+                    detail: userDetails?['occupation'] ?? 'N/A',
                   ),
                   ProfileDetail(
                     icon: Icons.school,
-                    detail: 'SAINTGITS COLLEGE OF ENGINEERING-MGP',
+                    detail: userDetails?['institution'] ?? 'N/A', // Assuming institution is part of the user details
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(

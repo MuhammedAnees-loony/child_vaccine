@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'profile.dart'; // Import the ProfilePage
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -14,6 +14,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _otpController = TextEditingController();   // OTP controller
   String? _generatedOtp; // To store the OTP received from the backend
   bool _isOtpSent = false; // Flag to check if OTP has been sent
+  // Function to send username and password to ProfilePage
+  void _sendToProfile(String username, String password) {
+    // Assuming ProfilePage has a method to handle the credentials
+    ProfilePage.handleLogin(username, password);
+  }
+
+
 
   // Function to generate OTP by sending the phone number to the backend
   Future<void> _generateOtp() async {
@@ -97,8 +104,10 @@ class _LoginScreenState extends State<LoginScreen> {
         if (responseData['success']) {
           print('Login successful. Sending OTP to ${_phoneController.text}');
           _isOtpSent = true; // Set flag to indicate OTP is sent
-          await _generateOtp(); // Generate OTP after successful login
+          await _generateOtp();
+          _sendToProfile(username,password);// Generate OTP after successful login
           _showDialog('Success', 'Login successful. Please check your phone for the OTP.');
+
         } else {
           print('Login failed: ${responseData['message']}');
           _showDialog('Error', responseData['message']);
