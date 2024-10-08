@@ -72,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // Verify OTP against stored OTP (if verification is done locally)
     if (otp == _generatedOtp) {
       print('OTP verification successful.');
+
       _showDialog('Success', 'OTP verified. You are logged in.');
       Navigator.pushReplacementNamed(context, '/home');
     } else {
