@@ -3,11 +3,14 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ProfilePage extends StatefulWidget {
-  // Removed unnecessary parameters
+  static String? _username;
+  static String? _password;
+
   static void handleLogin(String username, String password) {
-    // Handle the login data as needed
+    // Store the login credentials
+    _username = username;
+    _password = password;
     print('Received username: $username and password: $password');
-    // You can store these in a state management solution if needed
   }
 
   @override
@@ -21,30 +24,35 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Call fetchUserDetails inside the initState
     _fetchUserDetails();
   }
 
   Future<void> _fetchUserDetails() async {
+    if (ProfilePage._username == null || ProfilePage._password == null) {
+      _showErrorDialog("Username or password missing!");
+      return;
+    }
+
     final url = Uri.parse('http://localhost:5000/get-user-details'); // Change to your backend URL
     final response = await http.post(url, headers: {
       'Content-Type': 'application/json',
     }, body: json.encode({
-      'username': '', // You can pass the username here
-      'password': '', // You can pass the password here
+      'username': ProfilePage._username,
+      'password': ProfilePage._password,
     }));
 
     if (response.statusCode == 200) {
+      final data = json.decode(response.body)['user'];
+      print("Data from backend: $data"); // Console log to display received data
       setState(() {
-        userDetails = json.decode(response.body)['user'];
+        userDetails = data;
         isLoading = false;
       });
     } else {
       setState(() {
         isLoading = false;
       });
-      // Show an error message if user not found or invalid credentials
-      final errorMessage = json.decode(response.body)['message'];
+      final errorMessage = json.decode(response.body)['message'] ?? "An error occurred";
       _showErrorDialog(errorMessage);
     }
   }
@@ -105,7 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     backgroundColor: Colors.white,
                     child: CircleAvatar(
                       radius: 55,
-                      backgroundImage: AssetImage('D:/test2/assets/images/profile_pic.JPG'), // Replace with your image path
+                      backgroundImage: AssetImage('assets/images/profile_pic.JPG'), // Corrected image path
                     ),
                   ),
                 ],
@@ -123,67 +131,51 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             SizedBox(height: 10),
             Text(
-              userDetails?['email'] ?? 'N/A', // Assuming email is part of the user details
+              userDetails?['last_name'] ?? 'N/A',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black54,
               ),
             ),
-            SizedBox(height: 30),
-            // Profile Details
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ProfileDetail(
-                    icon: Icons.phone,
-                    detail: userDetails?['phone_number'] ?? 'N/A',
-                  ),
-                  ProfileDetail(
-                    icon: Icons.email,
-                    detail: userDetails?['email'] ?? 'N/A',
-                  ),
-                  ProfileDetail(
-                    icon: Icons.cake,
-                    detail: userDetails?['dob'] ?? 'N/A',
-                  ),
-                  ProfileDetail(
-                    icon: Icons.card_membership,
-                    detail: userDetails?['occupation'] ?? 'N/A',
-                  ),
-                  ProfileDetail(
-                    icon: Icons.school,
-                    detail: userDetails?['institution'] ?? 'N/A', // Assuming institution is part of the user details
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Add functionality here
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    ),
-                    child: Text(
-                      'How to use the App (Video Tutorial)',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Center(
-                    child: Text(
-                      'App Version : 9',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ),
-                ],
+            SizedBox(height: 10),
+            // Displaying all details from the database
+            ProfileDetail(icon: Icons.phone, detail: userDetails?['phone_number'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.email, detail: userDetails?['email'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.home, detail: userDetails?['address'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.pin_drop, detail: userDetails?['pincode'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.location_city, detail: userDetails?['village'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.work, detail: userDetails?['occupation'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.cake, detail: userDetails?['dob'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.map, detail: userDetails?['country'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.place, detail: userDetails?['state'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.location_pin, detail: userDetails?['district'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.people, detail: userDetails?['sex'] ?? 'N/A'),
+            ProfileDetail(icon: Icons.family_restroom, detail: userDetails?['married'] ?? 'N/A'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Add functionality here
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              child: Text(
+                'How to use the App (Video Tutorial)',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+            ),
+            SizedBox(height: 20),
+            Center(
+              child: Text(
+                'App Version : 9',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
               ),
             ),
           ],
