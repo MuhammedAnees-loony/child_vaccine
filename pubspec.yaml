@@ -25,4 +25,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/DSCF0806.JPG
-    - assets/images/background.jpg  # Add your background image here
+    - assets/images/background.jpg
+    - assets/images/profile_pic.JPG
